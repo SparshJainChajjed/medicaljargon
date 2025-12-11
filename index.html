@@ -2,233 +2,243 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>ClinicBridge – Decode Medical Jargon</title>
+  <title>ClinicBridge – Understand What Your Doctor Said</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="ClinicBridge turns medical jargon from audio, text, and prescriptions into simple, clear bullet points for patients and families." />
+  <meta name="description" content="ClinicBridge turns medical jargon from consultations, notes, and prescriptions into clear bullet points patients and families can understand." />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
   <style>
     body {
-      background:
-        radial-gradient(circle at top left, rgba(56,189,248,0.16), transparent 60%),
-        radial-gradient(circle at bottom right, rgba(34,197,94,0.18), transparent 60%),
-        #020617;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
     }
-    ::-webkit-scrollbar { width: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(148,163,184,0.4); border-radius: 999px; }
   </style>
 </head>
-<body class="min-h-screen text-slate-50 flex justify-center px-4 py-6">
-  <div class="w-full max-w-6xl space-y-6">
-    <header class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div class="flex items-center gap-3">
-        <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-sky-400 via-emerald-400 to-indigo-700 flex items-center justify-center shadow-[0_0_30px_rgba(56,189,248,0.6)]">
-          <span class="font-semibold text-lg tracking-tight text-slate-950">CB</span>
+<body class="bg-slate-50 text-slate-900">
+  <div class="min-h-screen flex justify-center px-4 py-10">
+    <div class="w-full max-w-6xl space-y-8">
+      <!-- NAV / BRAND -->
+      <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-emerald-400 to-teal-600 flex items-center justify-center shadow-sm">
+            <span class="font-semibold text-lg tracking-tight text-white">CB</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold tracking-wide text-slate-900">ClinicBridge</span>
+            <span class="text-xs text-slate-500">From doctor-speak to human-speak.</span>
+          </div>
         </div>
-        <div class="flex flex-col">
-          <span class="text-sm font-semibold tracking-wide uppercase text-slate-100">ClinicBridge</span>
-          <span class="text-xs text-slate-400">From doctor-speak to human-speak, in minutes.</span>
+        <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            Patient understanding tool
+          </span>
+          <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1">
+            Beta – does not replace a doctor
+          </span>
         </div>
-      </div>
-      <div class="flex flex-wrap items-center gap-2">
-        <div class="inline-flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/80 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300">
-          <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]"></span>
-          <span>Prototype for patients & caregivers</span>
-        </div>
-        <div class="rounded-full border border-sky-500/60 bg-sky-500/10 px-3 py-1 text-[11px] text-sky-200">
-          Built for Maximally Vibe-a-thon
-        </div>
-      </div>
-    </header>
+      </header>
 
-    <main class="grid gap-6 md:grid-cols-[1.1fr_minmax(0,1fr)]">
-      <section class="rounded-3xl border border-slate-800/80 bg-slate-900/80 px-5 py-5 shadow-[0_22px_60px_rgba(15,23,42,0.9)] backdrop-blur">
-        <div class="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1 text-[11px] uppercase tracking-[0.18em] text-slate-300 mb-3">
-          <span class="h-1.5 w-6 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400"></span>
-          <span>Problem</span>
-        </div>
-        <h1 class="text-2xl md:text-3xl font-semibold leading-tight mb-2">
-          Doctors speak in medical jargon.
-          <span class="bg-gradient-to-r from-sky-400 to-emerald-400 bg-clip-text text-transparent">Patients deserve clarity.</span>
-        </h1>
-        <p class="text-sm md:text-[13px] text-slate-300 max-w-xl mb-4">
-          ClinicBridge listens to your consultation, prescription, or discharge note and turns it into clear bullet points:
-          what is happening, what the doctor plans to do, and what you actually need to remember.
-        </p>
+      <!-- MAIN GRID -->
+      <main class="grid gap-8 lg:grid-cols-[1.05fr_minmax(0,1fr)] items-start">
+        <!-- LEFT: PRODUCT STORY -->
+        <section class="space-y-5">
+          <div class="space-y-3">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Why ClinicBridge</p>
+            <h1 class="text-2xl sm:text-3xl font-semibold leading-tight text-slate-900">
+              Your doctor explained everything.
+              <span class="block text-sky-600">You still deserve a version you can remember.</span>
+            </h1>
+            <p class="text-sm leading-relaxed text-slate-600 max-w-xl">
+              ClinicBridge listens to what the doctor says, or reads the prescription, and turns it into clear bullet points:
+              what is happening, what the plan is, and what you actually need to do next. No jargon, no guessing.
+            </p>
+          </div>
 
-        <div class="grid gap-3 md:grid-cols-3 mb-5">
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-3 text-xs flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-              <span class="h-5 w-5 rounded-full bg-sky-500/20 flex items-center justify-center text-[11px]">1</span>
-              <span class="font-semibold text-slate-100">Capture</span>
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-slate-900">1. Capture</p>
+              <p class="text-xs text-slate-500">Record the consultation, paste clinic notes, or scan a typed prescription.</p>
             </div>
-            <p class="text-slate-400 text-[11px]">Record doctor speech, paste text, or scan a prescription.</p>
-          </div>
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-3 text-xs flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-              <span class="h-5 w-5 rounded-full bg-sky-500/20 flex items-center justify-center text-[11px]">2</span>
-              <span class="font-semibold text-slate-100">Decode</span>
+            <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-slate-900">2. Decode</p>
+              <p class="text-xs text-slate-500">We detect medical terms and restructure the text in patient-first language.</p>
             </div>
-            <p class="text-slate-400 text-[11px]">Identify jargon, treatments, and follow-up steps.</p>
-          </div>
-          <div class="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-3 text-xs flex flex-col gap-1">
-            <div class="flex items-center gap-2">
-              <span class="h-5 w-5 rounded-full bg-sky-500/20 flex items-center justify-center text-[11px]">3</span>
-              <span class="font-semibold text-slate-100">Explain</span>
+            <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-slate-900">3. Explain</p>
+              <p class="text-xs text-slate-500">You get 3–6 simple bullet points you can share with family or caregivers.</p>
             </div>
-            <p class="text-slate-400 text-[11px]">Show 3–6 simple action points the patient can remember.</p>
           </div>
-        </div>
 
-        <div class="rounded-2xl border border-slate-800 bg-slate-950/60 px-3 py-3 text-[11px] text-slate-300 flex flex-col gap-1">
-          <div class="flex items-center gap-2">
-            <span class="h-1.5 w-1.5 rounded-full bg-amber-400"></span>
-            <span class="uppercase tracking-[0.18em] text-amber-200/90">Important</span>
+          <div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 flex gap-3 text-[11px] text-amber-900">
+            <div class="h-5 w-5 flex items-center justify-center rounded-full bg-amber-100 text-[11px] font-semibold">!</div>
+            <p>
+              ClinicBridge explains, it does not decide. It cannot diagnose or change treatment.
+              Always confirm medicines and decisions with your doctor, especially before starting, stopping, or changing doses.
+            </p>
           </div>
-          <p class="text-slate-300/90">
-            ClinicBridge is an explanation layer, not a doctor. It helps you understand what was said, but it does not diagnose, treat, or override medical advice.
-          </p>
-        </div>
-      </section>
+        </section>
 
-      <section class="rounded-3xl border border-slate-800/80 bg-slate-950/80 shadow-[0_22px_60px_rgba(15,23,42,0.95)] backdrop-blur px-4 py-4 flex flex-col gap-3">
-        <div class="flex items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="inline-flex h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)]"></span>
-            <span class="text-xs font-medium text-slate-200">Live Decoder</span>
-          </div>
-          <div class="flex items-center gap-2 text-[11px] text-slate-400">
-            <span id="modeLabel">Mode: On-device rules</span>
-          </div>
-        </div>
-
-        <div class="flex gap-1 rounded-full bg-slate-900/80 p-1 text-xs">
-          <button id="tab-audio" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium bg-slate-800 text-sky-200">
-            Audio
-          </button>
-          <button id="tab-text" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium text-slate-300">
-            Text
-          </button>
-          <button id="tab-image" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium text-slate-300">
-            Prescription
-          </button>
-        </div>
-
-        <div id="panel-audio" class="space-y-2">
-          <div class="text-[11px] text-slate-400">
-            Tap record while the doctor explains, then stop. We’ll transcribe and decode key points.
-          </div>
-          <div class="flex items-center gap-3">
-            <button id="recordBtn" class="inline-flex items-center gap-2 rounded-full bg-red-500/90 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-lg">
-              <span id="recordDot" class="h-2.5 w-2.5 rounded-full bg-slate-950"></span>
-              <span id="recordLabel">Start recording</span>
-            </button>
-            <div id="audioStatus" class="text-[11px] text-slate-400">Ready to record (Chrome recommended).</div>
-          </div>
-          <textarea id="audioText" class="mt-2 h-28 w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" placeholder="Transcript will appear here. You can also edit it if needed."></textarea>
+        <!-- RIGHT: APP PANEL -->
+        <section class="rounded-3xl border border-slate-200 bg-white shadow-sm px-4 py-4 sm:px-5 sm:py-5 space-y-4">
+          <!-- Header row -->
           <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 text-[11px] text-slate-400">
-              <input id="extraSimpleAudio" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900" />
-              <span>Extra simple language</span>
+            <div class="flex flex-col">
+              <p class="text-sm font-semibold text-slate-900">Decode my appointment</p>
+              <p class="text-[11px] text-slate-500">Choose how you want to capture what the doctor said.</p>
             </div>
-            <button id="explainAudio" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md">
-              Explain this for the patient
+            <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-500 flex items-center gap-1">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+              On-device rules (no login)
+            </div>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex gap-1 rounded-full bg-slate-100 p-1 text-xs">
+            <button id="tab-audio" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium bg-white text-slate-900 shadow-sm">
+              Audio
+            </button>
+            <button id="tab-text" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium text-slate-500">
+              Text
+            </button>
+            <button id="tab-prescription" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium text-slate-500">
+              Prescription
             </button>
           </div>
-        </div>
 
-        <div id="panel-text" class="hidden space-y-2">
-          <div class="text-[11px] text-slate-400">
-            Paste any clinic note, discharge summary line, or prescription text here.
-          </div>
-          <textarea id="plainText" class="mt-1 h-32 w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" placeholder="Example: Patient presents with acute exacerbation of chronic bronchitis. Start oral antibiotics, advise hydration, and schedule follow-up in 3 days."></textarea>
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 text-[11px] text-slate-400">
-              <input id="extraSimpleText" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900" />
-              <span>Extra simple language</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="fillExample" class="rounded-full border border-slate-700 bg-slate-900/80 px-3 py-1.5 text-[11px] text-slate-300">
-                Use example text
+          <!-- Panels -->
+          <!-- AUDIO PANEL -->
+          <div id="panel-audio" class="space-y-3">
+            <p class="text-[11px] text-slate-500">
+              Use during or right after the consultation. Ask the doctor to speak in full sentences.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <button id="recordBtn" class="inline-flex items-center gap-2 rounded-full bg-rose-500 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                <span id="recordDot" class="h-2.5 w-2.5 rounded-full bg-white"></span>
+                <span id="recordLabel">Start recording</span>
               </button>
-              <button id="explainText" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md">
-                Explain this for the patient
+              <p id="audioStatus" class="text-[11px] text-slate-500">Ready to record (Chrome recommended).</p>
+            </div>
+            <div class="space-y-1">
+              <label for="audioText" class="text-[11px] font-medium text-slate-600">Transcript</label>
+              <textarea id="audioText" class="h-28 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" placeholder="The words we hear will appear here. You can edit them if needed before decoding."></textarea>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-[11px] text-slate-600">
+                <input id="extraSimpleAudio" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-500" />
+                <span>Use extra simple language</span>
+              </label>
+              <button id="explainAudio" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                Generate explanation
               </button>
             </div>
           </div>
-        </div>
 
-        <div id="panel-image" class="hidden space-y-2">
-          <div class="text-[11px] text-slate-400">
-            Upload a clear photo or scan of a typed prescription. Handwriting may be harder to read.
-          </div>
-          <div class="flex items-center gap-2">
-            <input id="imageInput" type="file" accept="image/*" class="block w-full text-[11px] text-slate-300 file:mr-3 file:rounded-full file:border-0 file:bg-sky-500/90 file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-slate-950 hover:file:bg-sky-400" />
-          </div>
-          <div id="ocrStatus" class="text-[11px] text-slate-400">No image processed yet.</div>
-          <textarea id="ocrText" class="mt-1 h-28 w-full rounded-2xl border border-slate-800 bg-slate-900/80 px-3 py-2 text-xs text-slate-100 outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500" placeholder="Recognised prescription text will appear here."></textarea>
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2 text-[11px] text-slate-400">
-              <input id="extraSimpleImage" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-700 bg-slate-900" />
-              <span>Extra simple language</span>
+          <!-- TEXT PANEL -->
+          <div id="panel-text" class="hidden space-y-3">
+            <p class="text-[11px] text-slate-500">
+              Paste lines from a discharge summary, clinic note, or written instructions.
+            </p>
+            <div class="space-y-1">
+              <label for="plainText" class="text-[11px] font-medium text-slate-600">Medical text</label>
+              <textarea id="plainText" class="h-32 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" placeholder="Example: Patient presents with acute exacerbation of chronic bronchitis. Start oral antibiotics, advise hydration, and schedule follow-up in 3 days."></textarea>
             </div>
-            <button id="explainImage" class="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-sky-400 to-emerald-400 px-3 py-1.5 text-xs font-semibold text-slate-950 shadow-md">
-              Explain this for the patient
-            </button>
-          </div>
-        </div>
-
-        <div class="mt-3 rounded-2xl border border-slate-800 bg-slate-900/90 px-3 py-3 flex flex-col gap-2 max-h-64 overflow-y-auto">
-          <div class="flex items-center justify-between gap-2">
-            <div class="flex items-center gap-2">
-              <span class="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]"></span>
-              <span class="text-xs font-medium text-slate-100">Plain-language summary for the patient</span>
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-[11px] text-slate-600">
+                <input id="extraSimpleText" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-500" />
+                <span>Use extra simple language</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <button id="fillExample" class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-600">
+                  Fill example
+                </button>
+                <button id="explainText" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                  Generate explanation
+                </button>
+              </div>
             </div>
-            <div class="text-[11px] text-slate-400" id="summaryStatus">Waiting for input…</div>
           </div>
-          <ul id="summaryList" class="list-disc space-y-1 pl-4 text-[12px] text-slate-100">
-            <li class="text-slate-400">When you decode something, key points will appear here as simple bullet points.</li>
-          </ul>
-          <p class="text-[11px] text-slate-400">
-            Use this summary to remember the plan, but always confirm doubts directly with your doctor.
-          </p>
-        </div>
-      </section>
-    </main>
 
-    <footer class="flex flex-col gap-2 text-[11px] text-slate-400 md:flex-row md:items-center md:justify-between">
-      <p>ClinicBridge is an experimental patient-understanding interface. It does not replace a consultation with a qualified health professional.</p>
-      <p>Host this file directly on <a href="https://pages.github.com" class="text-sky-300 hover:underline" target="_blank" rel="noreferrer">GitHub Pages</a> and extend it with your own AI backend.</p>
-    </footer>
+          <!-- PRESCRIPTION PANEL -->
+          <div id="panel-prescription" class="hidden space-y-3">
+            <p class="text-[11px] text-slate-500">
+              Upload a clear photo or scan of a typed prescription (printed text works best).
+            </p>
+            <div class="space-y-1">
+              <label class="text-[11px] font-medium text-slate-600">Upload image</label>
+              <input id="imageInput" type="file" accept="image/*" class="block w-full text-[11px] text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-3 file:py-1.5 file:text-[11px] file:font-semibold file:text-white hover:file:bg-sky-500" />
+            </div>
+            <p id="ocrStatus" class="text-[11px] text-slate-500">No prescription processed yet.</p>
+            <div class="space-y-1">
+              <label for="ocrText" class="text-[11px] font-medium text-slate-600">Recognised text</label>
+              <textarea id="ocrText" class="h-28 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" placeholder="Once we read the prescription, the text will appear here. You can correct spelling if needed before decoding."></textarea>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-[11px] text-slate-600">
+                <input id="extraSimpleImage" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-500" />
+                <span>Use extra simple language</span>
+              </label>
+              <button id="explainImage" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                Generate explanation
+              </button>
+            </div>
+          </div>
+
+          <!-- RESULT AREA -->
+          <div class="border-t border-slate-200 pt-4 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs font-semibold text-slate-900">What this means for you</p>
+              <p id="summaryStatus" class="text-[11px] text-slate-500">Waiting for input…</p>
+            </div>
+            <ul id="summaryList" class="max-h-40 overflow-y-auto space-y-1 pl-5 text-[12px] text-slate-800 list-disc">
+              <li class="text-slate-500">After you decode something, 3–6 key points will appear here in simple language.</li>
+            </ul>
+            <p class="text-[11px] text-slate-500">
+              Use this summary to remember the plan or explain it to family, but always check questions with your doctor.
+            </p>
+          </div>
+        </section>
+      </main>
+
+      <!-- FOOTER -->
+      <footer class="border-t border-slate-200 pt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[11px] text-slate-500">
+        <p>ClinicBridge is a patient-understanding layer on top of real medical care. It never replaces a qualified professional.</p>
+        <p>To host: save this as <code>index.html</code> in a public repo and enable GitHub Pages.</p>
+      </footer>
+    </div>
   </div>
 
   <script>
+    // TAB LOGIC
     const tabs = {
       audio: document.getElementById("tab-audio"),
       text: document.getElementById("tab-text"),
-      image: document.getElementById("tab-image")
+      prescription: document.getElementById("tab-prescription")
     };
     const panels = {
       audio: document.getElementById("panel-audio"),
       text: document.getElementById("panel-text"),
-      image: document.getElementById("panel-image")
+      prescription: document.getElementById("panel-prescription")
     };
+
     function activateTab(key) {
       Object.keys(tabs).forEach(k => {
         if (k === key) {
-          tabs[k].classList.add("bg-slate-800","text-sky-200");
+          tabs[k].classList.add("bg-white","text-slate-900","shadow-sm");
+          tabs[k].classList.remove("text-slate-500");
           panels[k].classList.remove("hidden");
         } else {
-          tabs[k].classList.remove("bg-slate-800","text-sky-200");
+          tabs[k].classList.remove("bg-white","text-slate-900","shadow-sm");
+          tabs[k].classList.add("text-slate-500");
           panels[k].classList.add("hidden");
         }
       });
     }
+
     tabs.audio.onclick = () => activateTab("audio");
     tabs.text.onclick = () => activateTab("text");
-    tabs.image.onclick = () => activateTab("image");
+    tabs.prescription.onclick = () => activateTab("prescription");
 
+    // JARGON + SIMPLIFIER
     const jargonMap = [
       ["acute","sudden or very recent"],
       ["chronic","long-term or ongoing"],
@@ -266,35 +276,43 @@
       ["remission","time when signs of disease reduce or disappear"],
       ["palliative","focused on comfort rather than cure"]
     ];
+
     const sentenceReplacements = [
       ["the patient","you"],
       ["patient","you"],
       ["pt","you"],
       ["presents with","came because of"],
       ["presented with","came because of"],
-      ["advise","the doctor advises you to"],
       ["should be started on","you will start taking"],
+      ["will be started on","you will start taking"],
       ["start","start taking"],
       ["will be monitored","we will keep watching"],
       ["needs to","you need to"],
-      ["recommended","the doctor recommends"]
+      ["recommended","the doctor recommends"],
+      ["advise","the doctor advises you to"]
     ];
+
     function simplifyTerms(text, extraSimple) {
       let out = text;
       jargonMap.forEach(([term, plain]) => {
         const pattern = new RegExp("\\b" + term.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
-        out = out.replace(pattern, m => {
-          const base = plain;
-          if (extraSimple) return base;
-          return base;
-        });
+        out = out.replace(pattern, plain);
       });
       sentenceReplacements.forEach(([from,to]) => {
         const pattern = new RegExp("\\b" + from.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
-        out = out.replace(pattern,to);
+        out = out.replace(pattern, to);
       });
+      if (extraSimple) {
+        out = out
+          .replace(/\badminister\b/gi,"give")
+          .replace(/\bcommence\b/gi,"start")
+          .replace(/\bdiscontinue\b/gi,"stop")
+          .replace(/\bconsume\b/gi,"take")
+          .replace(/\bprior to\b/gi,"before");
+      }
       return out;
     }
+
     function splitSentences(text) {
       return text
         .replace(/\s+/g," ")
@@ -302,43 +320,41 @@
         .map(s => s.trim())
         .filter(Boolean);
     }
+
     function buildBulletSummary(rawText, extraSimple) {
       const base = simplifyTerms(rawText, extraSimple);
       const sentences = splitSentences(base);
-      const cleaned = [];
-      sentences.forEach(s => {
+      const cleaned = sentences.map(s => {
         let t = s;
         t = t.replace(/^you are advised to/i,"you should");
         t = t.replace(/^it is advised that/i,"you should");
         t = t.replace(/^plan:/i,"the plan is");
         t = t.replace(/^impression:/i,"the doctor thinks");
         t = t.replace(/^assessment:/i,"the doctor believes");
-        if (extraSimple) {
-          t = t.replace(/\badminister\b/gi,"give");
-          t = t.replace(/\bcommence\b/gi,"start");
-          t = t.replace(/\bdiscontinue\b/gi,"stop");
-          t = t.replace(/\bconsume\b/gi,"take");
-          t = t.replace(/\bprior to\b/gi,"before");
-        }
-        cleaned.push(t);
+        return t;
       });
+
       const bullets = [];
       cleaned.forEach(s => {
         if (/diagnosis|doctor thinks|doctor believes/i.test(s)) {
           bullets.push("What the doctor thinks is happening: " + s);
-        } else if (/plan|start|continue|stop|take|give|dose|every|daily|twice/i.test(s)) {
+        } else if (/plan|start taking|continue|stop|dose|every|daily|twice|tablet|capsule|syrup/i.test(s)) {
           bullets.push("What you need to do with medicines or treatment: " + s);
         } else if (/follow-up|come back|review|next visit|in \d+ days/i.test(s)) {
           bullets.push("When you need to come back or follow up: " + s);
-        } else if (/warning|if you/i.test(s) || /seek|immediately/i.test(s)) {
+        } else if (/warning|if you/i.test(s) || /seek|immediately|emergency/i.test(s)) {
           bullets.push("Danger signs or when to seek help: " + s);
         } else {
           bullets.push(s);
         }
       });
-      if (!bullets.length) return ["No clear sentences detected. Try adding a bit more context from the doctor's explanation."];
-      const limited = bullets.slice(0,6);
-      if (extraSimple && limited.length) {
+
+      if (!bullets.length) {
+        return ["No clear sentences detected. Try including one or two full sentences from what the doctor said."];
+      }
+
+      const limited = bullets.slice(0, 6);
+      if (extraSimple) {
         return limited.map(b => {
           let t = b;
           t = t.replace(/what the doctor thinks is happening:/i,"the doctor thinks this is happening:");
@@ -350,13 +366,15 @@
       }
       return limited;
     }
+
     const summaryList = document.getElementById("summaryList");
     const summaryStatus = document.getElementById("summaryStatus");
+
     function renderSummary(bullets, label) {
       summaryList.innerHTML = "";
       bullets.forEach(b => {
         const li = document.createElement("li");
-        li.className = "text-[12px] text-slate-100";
+        li.className = "text-[12px] text-slate-800";
         li.textContent = b;
         summaryList.appendChild(li);
       });
@@ -364,28 +382,36 @@
     }
 
     function handleExplain(text, extraSimple) {
-      const t = text.trim();
-      if (!t) {
-        renderSummary(["Paste or record something first. For example, one or two lines from what the doctor said."],"No input");
+      const trimmed = text.trim();
+      if (!trimmed) {
+        renderSummary(
+          ["Paste, record, or scan something first. For example, one or two sentences of what the doctor said."],
+          "No input"
+        );
         return;
       }
       summaryStatus.textContent = "Decoding…";
-      const bullets = buildBulletSummary(t, extraSimple);
-      renderSummary(bullets, extraSimple ? "Extra simple explanation" : "Standard simple explanation");
+      const bullets = buildBulletSummary(trimmed, extraSimple);
+      renderSummary(bullets, extraSimple ? "Extra simple explanation" : "Standard explanation");
     }
 
+    // TEXT PANEL HOOKS
     const plainText = document.getElementById("plainText");
     const fillExample = document.getElementById("fillExample");
     const explainText = document.getElementById("explainText");
     const extraSimpleText = document.getElementById("extraSimpleText");
+
     fillExample.onclick = () => {
-      plainText.value = "Patient presented with acute exacerbation of chronic bronchitis. Start oral antibiotics and provide symptomatic relief. Advise adequate hydration, monitor vitals, and schedule follow-up in 3 days to review labs and check for any adverse reaction.";
+      plainText.value =
+        "Patient presents with acute exacerbation of chronic bronchitis. Start oral antibiotics and provide symptomatic relief. Advise adequate hydration, monitor vitals, and schedule follow-up in 3 days to review labs and check for any adverse reaction.";
       plainText.focus();
     };
+
     explainText.onclick = () => {
       handleExplain(plainText.value, extraSimpleText.checked);
     };
 
+    // AUDIO PANEL HOOKS
     const recordBtn = document.getElementById("recordBtn");
     const recordDot = document.getElementById("recordDot");
     const recordLabel = document.getElementById("recordLabel");
@@ -393,26 +419,31 @@
     const audioText = document.getElementById("audioText");
     const explainAudio = document.getElementById("explainAudio");
     const extraSimpleAudio = document.getElementById("extraSimpleAudio");
+
     let recognition = null;
     let isRecording = false;
+
     if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SR();
       recognition.lang = "en-IN";
       recognition.interimResults = true;
       recognition.continuous = true;
+
       recognition.onstart = () => {
-        audioStatus.textContent = "Listening… ask the doctor to explain in simple sentences.";
+        audioStatus.textContent = "Listening… ask the doctor to speak in full sentences.";
       };
+
       recognition.onerror = e => {
         audioStatus.textContent = "Speech recognition error: " + e.error;
         isRecording = false;
-        recordDot.classList.remove("bg-emerald-400");
-        recordDot.classList.add("bg-slate-950");
-        recordBtn.classList.remove("bg-red-400");
-        recordBtn.classList.add("bg-red-500/90");
+        recordDot.classList.remove("bg-emerald-500");
+        recordDot.classList.add("bg-white");
+        recordBtn.classList.remove("bg-rose-600");
+        recordBtn.classList.add("bg-rose-500");
         recordLabel.textContent = "Start recording";
       };
+
       recognition.onresult = e => {
         let transcript = "";
         for (let i = 0; i < e.results.length; i++) {
@@ -420,14 +451,15 @@
         }
         audioText.value = transcript.trim();
       };
+
       recognition.onend = () => {
         if (isRecording) {
           audioStatus.textContent = "Stopped listening.";
           isRecording = false;
-          recordDot.classList.remove("bg-emerald-400");
-          recordDot.classList.add("bg-slate-950");
-          recordBtn.classList.remove("bg-red-400");
-          recordBtn.classList.add("bg-red-500/90");
+          recordDot.classList.remove("bg-emerald-500");
+          recordDot.classList.add("bg-white");
+          recordBtn.classList.remove("bg-rose-600");
+          recordBtn.classList.add("bg-rose-500");
           recordLabel.textContent = "Start recording";
         }
       };
@@ -436,53 +468,60 @@
       recordBtn.disabled = true;
       recordBtn.classList.add("opacity-60","cursor-not-allowed");
     }
+
     recordBtn.onclick = () => {
       if (!recognition) return;
       if (!isRecording) {
         recognition.start();
         isRecording = true;
-        recordDot.classList.remove("bg-slate-950");
-        recordDot.classList.add("bg-emerald-400");
-        recordBtn.classList.remove("bg-red-500/90");
-        recordBtn.classList.add("bg-red-400");
+        recordDot.classList.remove("bg-white");
+        recordDot.classList.add("bg-emerald-500");
+        recordBtn.classList.remove("bg-rose-500");
+        recordBtn.classList.add("bg-rose-600");
         recordLabel.textContent = "Stop recording";
         audioStatus.textContent = "Listening…";
       } else {
         recognition.stop();
         isRecording = false;
-        recordDot.classList.remove("bg-emerald-400");
-        recordDot.classList.add("bg-slate-950");
-        recordBtn.classList.remove("bg-red-400");
-        recordBtn.classList.add("bg-red-500/90");
+        recordDot.classList.remove("bg-emerald-500");
+        recordDot.classList.add("bg-white");
+        recordBtn.classList.remove("bg-rose-600");
+        recordBtn.classList.add("bg-rose-500");
         recordLabel.textContent = "Start recording";
         audioStatus.textContent = "Stopped recording.";
       }
     };
+
     explainAudio.onclick = () => {
       handleExplain(audioText.value, extraSimpleAudio.checked);
     };
 
+    // PRESCRIPTION PANEL HOOKS
     const imageInput = document.getElementById("imageInput");
     const ocrStatus = document.getElementById("ocrStatus");
     const ocrText = document.getElementById("ocrText");
     const explainImage = document.getElementById("explainImage");
     const extraSimpleImage = document.getElementById("extraSimpleImage");
+
     imageInput.onchange = () => {
       const file = imageInput.files && imageInput.files[0];
       if (!file) return;
-      ocrStatus.textContent = "Running OCR on this image…";
-      Tesseract.recognize(file,"eng",{ logger:m => {
-        if (m.status === "recognizing text" && m.progress) {
-          const pct = Math.round(m.progress*100);
-          ocrStatus.textContent = "Recognising text… " + pct + "%";
+      ocrStatus.textContent = "Reading prescription…";
+      Tesseract.recognize(file,"eng",{
+        logger: m => {
+          if (m.status === "recognizing text" && m.progress) {
+            const pct = Math.round(m.progress * 100);
+            ocrStatus.textContent = "Recognising text… " + pct + "%";
+          }
         }
-      }}).then(({ data }) => {
+      }).then(({ data }) => {
         ocrText.value = (data && data.text ? data.text.trim() : "");
-        ocrStatus.textContent = "Finished reading text. Edit if needed, then tap explain.";
-      }).catch(err => {
-        ocrStatus.textContent = "Could not read this image. Try a clearer photo or typed prescription.";
+        ocrStatus.textContent = "Finished reading. Edit if needed, then generate an explanation.";
+      }).catch(() => {
+        ocrStatus.textContent = "Could not read this image. Try a clearer photo or printed text.";
       });
     };
+
     explainImage.onclick = () => {
       handleExplain(ocrText.value, extraSimpleImage.checked);
     };
