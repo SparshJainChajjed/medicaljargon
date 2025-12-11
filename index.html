@@ -1,388 +1,598 @@
-<script>
-  const tabs = {
-    audio: document.getElementById("tab-audio"),
-    text: document.getElementById("tab-text"),
-    prescription: document.getElementById("tab-prescription")
-  };
-  const panels = {
-    audio: document.getElementById("panel-audio"),
-    text: document.getElementById("panel-text"),
-    prescription: document.getElementById("panel-prescription")
-  };
-
-  function activateTab(key) {
-    Object.keys(tabs).forEach(k => {
-      if (k === key) {
-        tabs[k].classList.add("bg-white","text-slate-900","shadow-sm");
-        tabs[k].classList.remove("text-slate-500");
-        panels[k].classList.remove("hidden");
-      } else {
-        tabs[k].classList.remove("bg-white","text-slate-900","shadow-sm");
-        tabs[k].classList.add("text-slate-500");
-        panels[k].classList.add("hidden");
-      }
-    });
-  }
-
-  tabs.audio.onclick = () => activateTab("audio");
-  tabs.text.onclick = () => activateTab("text");
-  tabs.prescription.onclick = () => activateTab("prescription");
-
-  const jargonMap = [
-    ["acute","sudden or very recent"],
-    ["chronic","long-term or ongoing"],
-    ["exacerbation","worsening or flare-up"],
-    ["hypertension","high blood pressure"],
-    ["hypotension","low blood pressure"],
-    ["tachycardia","fast heartbeat"],
-    ["bradycardia","slow heartbeat"],
-    ["myocardial infarction","heart attack"],
-    ["ischemia","not enough blood flow"],
-    ["edema","swelling caused by extra fluid"],
-    ["lesion","abnormal patch or spot on the body"],
-    ["benign","not cancer and usually not dangerous"],
-    ["malignant","cancerous and can spread"],
-    ["prognosis","how the illness is likely to go in future"],
-    ["diagnosis","name of the illness or condition"],
-    ["respiratory distress","serious trouble breathing"],
-    ["dehydration","not enough fluid in the body"],
-    ["intravenous","through a vein using a drip or injection"],
-    ["oral","by mouth"],
-    ["topical","applied on the skin"],
-    ["symptomatic relief","treatment that reduces discomfort but does not remove the cause"],
-    ["monitor","keep watching carefully"],
-    ["follow-up","come back again for review"],
-    ["presented with","came to the doctor because of"],
-    ["contraindicated","should not be used because it may be harmful"],
-    ["adverse reaction","harmful or unwanted side effect"],
-    ["labs","blood tests or other investigations"],
-    ["vitals","basic body signs like pulse, blood pressure, temperature and breathing rate"],
-    ["antibiotics","medicines used to treat bacterial infections"],
-    ["infection","germs in the body causing illness"],
-    ["inflammation","swelling, heat, or redness in part of the body"],
-    ["idiopathic","cause is unknown"],
-    ["metastasis","spread of cancer to other parts of the body"],
-    ["remission","time when signs of disease reduce or disappear"],
-    ["palliative","focused on comfort rather than cure"],
-    ["analgesic","pain-relief medicine"],
-    ["antipyretic","medicine that reduces fever"],
-    ["NSAID","a type of pain and inflammation medicine"],
-    ["bradykinesia","slowness of movement, usually due to a problem in the brain's movement centres, often seen in Parkinson's disease"]
-  ];
-
-  const phraseReplacements = [
-    ["the patient","you"],
-    ["patient","you"],
-    ["pt","you"],
-    ["presents with","came because of"],
-    ["presented with","came because of"],
-    ["should be started on","you will start taking"],
-    ["will be started on","you will start taking"],
-    ["start on","start taking"],
-    ["start","start taking"],
-    ["will be monitored","we will keep watching"],
-    ["needs to","you need to"],
-    ["recommended","the doctor recommends"],
-    ["advise","the doctor advises you to"]
-  ];
-
-  function simplifyTerms(text, extraSimple) {
-    let out = text;
-
-    jargonMap.forEach(([term, plain]) => {
-      const pattern = new RegExp("\\b" + term.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
-      out = out.replace(pattern, plain);
-    });
-
-    phraseReplacements.forEach(([from, to]) => {
-      const pattern = new RegExp("\\b" + from.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
-      out = out.replace(pattern, to);
-    });
-
-    if (extraSimple) {
-      out = out
-        .replace(/\badminister\b/gi,"give")
-        .replace(/\bcommence\b/gi,"start")
-        .replace(/\bdiscontinue\b/gi,"stop")
-        .replace(/\bconsume\b/gi,"take")
-        .replace(/\bprior to\b/gi,"before")
-        .replace(/\bsubsequently\b/gi,"then");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>ClinicBridge – Understand What Your Doctor Said</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="ClinicBridge turns medical jargon from consultations, notes, and prescriptions into clear bullet points patients and families can understand." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
     }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+  <div class="min-h-screen flex justify-center px-4 py-10">
+    <div class="w-full max-w-6xl space-y-8">
+      <!-- NAV / BRAND -->
+      <header class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div class="flex items-center gap-3">
+          <div class="h-11 w-11 rounded-2xl bg-gradient-to-tr from-sky-500 via-emerald-400 to-teal-600 flex items-center justify-center shadow-sm">
+            <span class="font-semibold text-lg tracking-tight text-white">CB</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold tracking-wide text-slate-900">ClinicBridge</span>
+            <span class="text-xs text-slate-500">From doctor-speak to human-speak.</span>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2 text-xs text-slate-500">
+          <span class="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-emerald-700">
+            <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+            Patient understanding tool
+          </span>
+          <span class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1">
+            Beta – does not replace a doctor
+          </span>
+        </div>
+      </header>
 
-    return out;
-  }
+      <!-- MAIN GRID -->
+      <main class="grid gap-8 lg:grid-cols-[1.05fr_minmax(0,1fr)] items-start">
+        <!-- LEFT: PRODUCT STORY -->
+        <section class="space-y-5">
+          <div class="space-y-3">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Why ClinicBridge</p>
+            <h1 class="text-2xl sm:text-3xl font-semibold leading-tight text-slate-900">
+              Your doctor explained everything.
+              <span class="block text-sky-600">You still deserve a version you can remember.</span>
+            </h1>
+            <p class="text-sm leading-relaxed text-slate-600 max-w-xl">
+              ClinicBridge listens to what the doctor says, or reads the prescription, and turns it into clear bullet points:
+              what is happening, what the plan is, and what you actually need to do next. No jargon, no guessing.
+            </p>
+          </div>
 
-  function splitSentences(text) {
-    return text
-      .replace(/\s+/g," ")
-      .split(/(?<=[.!?])\s+|\n+/)
-      .map(s => s.trim())
-      .filter(Boolean);
-  }
+          <div class="grid gap-3 sm:grid-cols-3">
+            <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-slate-900">1. Capture</p>
+              <p class="text-xs text-slate-500">Record the consultation, paste clinic notes, or scan a typed prescription.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-slate-900">2. Decode</p>
+              <p class="text-xs text-slate-500">We detect medical terms and re-structure the text in patient-first language.</p>
+            </div>
+            <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
+              <p class="text-xs font-semibold text-slate-900">3. Explain</p>
+              <p class="text-xs text-slate-500">You get 3–6 simple bullet points you can share with family or caregivers.</p>
+            </div>
+          </div>
 
-  function classifySentence(sentenceLower) {
-    const s = sentenceLower;
-    const has = list => list.some(word => s.includes(word));
+          <div class="rounded-2xl border border-amber-100 bg-amber-50 px-4 py-3 flex gap-3 text-[11px] text-amber-900">
+            <div class="h-5 w-5 flex items-center justify-center rounded-full bg-amber-100 text-[11px] font-semibold">!</div>
+            <p>
+              ClinicBridge explains, it does not decide. It cannot diagnose or change treatment.
+              Always confirm medicines and decisions with your doctor, especially before starting, stopping, or changing doses.
+            </p>
+          </div>
+        </section>
 
-    if (has(["you have ","has ","diagnosed with","suffers from","is suffering from"])) return "condition";
-    if (has(["diagnosis","impression","assessment"])) return "condition";
-    if (has(["presenting with","presents with","came because of","came with","history of","complaint","c/o"])) return "condition";
+        <!-- RIGHT: APP PANEL -->
+        <section class="rounded-3xl border border-slate-200 bg-white shadow-sm px-4 py-4 sm:px-5 sm:py-5 space-y-4">
+          <!-- Header row -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex flex-col">
+              <p class="text-sm font-semibold text-slate-900">Decode my appointment</p>
+              <p class="text-[11px] text-slate-500">Choose how you want to capture what the doctor said.</p>
+            </div>
+            <div class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] text-slate-500 flex items-center gap-1">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+              On-device rules (no login)
+            </div>
+          </div>
 
-    if (has(["tablet","cap ","capsule","syrup","dose","mg","once daily","twice daily","thrice","bd","tds","start taking","continue","stop"])) {
-      return "treatment";
-    }
+          <!-- Tabs -->
+          <div class="flex gap-1 rounded-full bg-slate-100 p-1 text-xs">
+            <button id="tab-audio" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium bg-white text-slate-900 shadow-sm">
+              Audio
+            </button>
+            <button id="tab-text" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium text-slate-500">
+              Text
+            </button>
+            <button id="tab-prescription" class="flex-1 rounded-full px-3 py-1.5 text-center font-medium text-slate-500">
+              Prescription
+            </button>
+          </div>
 
-    if (has(["investigation","labs","blood test","x-ray","xray","scan","ct ","mri","ultrasound"])) {
-      return "tests";
-    }
+          <!-- AUDIO PANEL -->
+          <div id="panel-audio" class="space-y-3">
+            <p class="text-[11px] text-slate-500">
+              Use during or right after the consultation. Ask the doctor to speak in full sentences.
+            </p>
+            <div class="flex flex-wrap items-center gap-3">
+              <button id="recordBtn" class="inline-flex items-center gap-2 rounded-full bg-rose-500 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                <span id="recordDot" class="h-2.5 w-2.5 rounded-full bg-white"></span>
+                <span id="recordLabel">Start recording</span>
+              </button>
+              <p id="audioStatus" class="text-[11px] text-slate-500">Ready to record (Chrome recommended).</p>
+            </div>
+            <div class="space-y-1">
+              <label for="audioText" class="text-[11px] font-medium text-slate-600">Transcript</label>
+              <textarea id="audioText" class="h-28 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" placeholder="The words we hear will appear here. You can edit them if needed before decoding."></textarea>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-[11px] text-slate-600">
+                <input id="extraSimpleAudio" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-500" />
+                <span>Use extra simple language</span>
+              </label>
+              <button id="explainAudio" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                Generate explanation
+              </button>
+            </div>
+          </div>
 
-    if (has(["follow-up","follow up","review","revisit","next visit","come back","return in","see again in"])) {
-      return "followup";
-    }
+          <!-- TEXT PANEL -->
+          <div id="panel-text" class="hidden space-y-3">
+            <p class="text-[11px] text-slate-500">
+              Paste lines from a discharge summary, clinic note, or written instructions.
+            </p>
+            <div class="space-y-1">
+              <label for="plainText" class="text-[11px] font-medium text-slate-600">Medical text</label>
+              <textarea id="plainText" class="h-32 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" placeholder="Example: Patient presents with acute exacerbation of chronic bronchitis. Start oral antibiotics, advise hydration, and schedule follow-up in 3 days."></textarea>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-[11px] text-slate-600">
+                <input id="extraSimpleText" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-500" />
+                <span>Use extra simple language</span>
+              </label>
+              <div class="flex items-center gap-2">
+                <button id="fillExample" class="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] text-slate-600">
+                  Fill example
+                </button>
+                <button id="explainText" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                  Generate explanation
+                </button>
+              </div>
+            </div>
+          </div>
 
-    if (has(["emergency","immediately","if you","worsen","gets worse","high fever","chest pain","difficulty breathing","shortness of breath"])) {
-      return "warnings";
-    }
+          <!-- PRESCRIPTION PANEL -->
+          <div id="panel-prescription" class="hidden space-y-3">
+            <p class="text-[11px] text-slate-500">
+              Upload a clear photo or scan of a typed prescription (printed text works best).
+            </p>
+            <div class="space-y-1">
+              <label class="text-[11px] font-medium text-slate-600">Upload image</label>
+              <input id="imageInput" type="file" accept="image/*" class="block w-full text-[11px] text-slate-600 file:mr-3 file:rounded-full file:border-0 file:bg-sky-600 file:px-3 file:py-1.5 file:text-[11px] file:font-semibold file:text-white hover:file:bg-sky-500" />
+            </div>
+            <p id="ocrStatus" class="text-[11px] text-slate-500">No prescription processed yet.</p>
+            <div class="space-y-1">
+              <label for="ocrText" class="text-[11px] font-medium text-slate-600">Recognised text</label>
+              <textarea id="ocrText" class="h-28 w-full rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900 outline-none focus:border-sky-400 focus:ring-1 focus:ring-sky-400" placeholder="Once we read the prescription, the text will appear here. You can correct spelling if needed before decoding."></textarea>
+            </div>
+            <div class="flex items-center justify-between gap-2">
+              <label class="inline-flex items-center gap-2 text-[11px] text-slate-600">
+                <input id="extraSimpleImage" type="checkbox" class="h-3.5 w-3.5 rounded border-slate-300 text-sky-500" />
+                <span>Use extra simple language</span>
+              </label>
+              <button id="explainImage" class="inline-flex items-center gap-2 rounded-full bg-sky-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm">
+                Generate explanation
+              </button>
+            </div>
+          </div>
 
-    return "other";
-  }
+          <!-- RESULT AREA -->
+          <div class="border-t border-slate-200 pt-4 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <p class="text-xs font-semibold text-slate-900">What this means for you</p>
+              <p id="summaryStatus" class="text-[11px] text-slate-500">Waiting for input…</p>
+            </div>
+            <ul id="summaryList" class="max-h-40 overflow-y-auto space-y-1 pl-5 text-[12px] text-slate-800 list-disc">
+              <li class="text-slate-500">After you decode something, 3–6 key points will appear here in simple language.</li>
+            </ul>
+            <p class="text-[11px] text-slate-500">
+              Use this summary to remember the plan or explain it to family, but always check questions with your doctor.
+            </p>
+          </div>
+        </section>
+      </main>
 
-  function cleanSentenceForPatient(original, extraSimple) {
-    let text = original.trim();
+      <!-- FOOTER -->
+      <footer class="border-t border-slate-200 pt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between text-[11px] text-slate-500">
+        <p>ClinicBridge is a patient-understanding layer on top of real medical care. It never replaces a qualified professional.</p>
+        <p>To host: save this as <code>index.html</code> in a public repo and enable GitHub Pages.</p>
+      </footer>
+    </div>
+  </div>
 
-    text = text.replace(/^patient[:\s]+/i,"");
-    text = text.replace(/^the patient[:\s]+/i,"");
-    text = text.replace(/^pt[:\s]+/i,"");
-
-    text = simplifyTerms(text, extraSimple);
-
-    text = text.replace(/\bhe\b/gi,"you");
-    text = text.replace(/\bshe\b/gi,"you");
-    text = text.replace(/\bthey\b/gi,"you");
-
-    if (extraSimple) {
-      const parts = text.split(",");
-      if (parts.length > 2) text = parts.slice(0,2).join(",");
-    }
-
-    return text.trim();
-  }
-
-  function buildBulletSummary(rawText, extraSimple) {
-    const simplifiedBlock = simplifyTerms(rawText, extraSimple);
-    const sentences = splitSentences(simplifiedBlock);
-
-    const buckets = {
-      condition: [],
-      treatment: [],
-      tests: [],
-      followup: [],
-      warnings: [],
-      other: []
+  <script>
+    const tabs = {
+      audio: document.getElementById("tab-audio"),
+      text: document.getElementById("tab-text"),
+      prescription: document.getElementById("tab-prescription")
+    };
+    const panels = {
+      audio: document.getElementById("panel-audio"),
+      text: document.getElementById("panel-text"),
+      prescription: document.getElementById("panel-prescription")
     };
 
-    sentences.forEach(sent => {
-      const lower = sent.toLowerCase();
-      const category = classifySentence(lower);
-      const cleaned = cleanSentenceForPatient(sent, extraSimple);
-      if (!cleaned) return;
-      buckets[category].push(cleaned);
-    });
-
-    const bullets = [];
-
-    if (buckets.condition.length) {
-      bullets.push("What the doctor thinks is happening: " + buckets.condition.join(" "));
-    }
-    if (buckets.treatment.length) {
-      bullets.push("What you need to do with medicines or treatment: " + buckets.treatment.join(" "));
-    }
-    if (buckets.tests.length) {
-      bullets.push("Tests or checks the doctor wants: " + buckets.tests.join(" "));
-    }
-    if (buckets.followup.length) {
-      bullets.push("When you should come back: " + buckets.followup.join(" "));
-    }
-    if (buckets.warnings.length) {
-      bullets.push("Important warning signs or when to seek help: " + buckets.warnings.join(" "));
-    }
-    if (!bullets.length && buckets.other.length) {
-      bullets.push("Other information: " + buckets.other.join(" "));
-    }
-
-    if (!bullets.length) {
-      return ["No clear sentences detected. Try including one or two full sentences from what the doctor said."];
-    }
-
-    const top = bullets.slice(0, 6);
-
-    if (extraSimple) {
-      return top.map(b => {
-        return b
-          .replace("What the doctor thinks is happening:","The doctor thinks this is happening:")
-          .replace("What you need to do with medicines or treatment:","About your medicines:")
-          .replace("Tests or checks the doctor wants:","Tests the doctor wants:")
-          .replace("When you should come back:","When you must come back:")
-          .replace("Important warning signs or when to seek help:","Watch out for this:");
+    function activateTab(key) {
+      Object.keys(tabs).forEach(k => {
+        if (k === key) {
+          tabs[k].classList.add("bg-white","text-slate-900","shadow-sm");
+          tabs[k].classList.remove("text-slate-500");
+          panels[k].classList.remove("hidden");
+        } else {
+          tabs[k].classList.remove("bg-white","text-slate-900","shadow-sm");
+          tabs[k].classList.add("text-slate-500");
+          panels[k].classList.add("hidden");
+        }
       });
     }
 
-    return top;
-  }
+    tabs.audio.onclick = () => activateTab("audio");
+    tabs.text.onclick = () => activateTab("text");
+    tabs.prescription.onclick = () => activateTab("prescription");
 
-  const summaryList = document.getElementById("summaryList");
-  const summaryStatus = document.getElementById("summaryStatus");
+    const jargonMap = [
+      ["acute","sudden or very recent"],
+      ["chronic","long-term or ongoing"],
+      ["exacerbation","worsening or flare-up"],
+      ["hypertension","high blood pressure"],
+      ["hypotension","low blood pressure"],
+      ["tachycardia","fast heartbeat"],
+      ["bradycardia","slow heartbeat"],
+      ["myocardial infarction","heart attack"],
+      ["ischemia","not enough blood flow"],
+      ["edema","swelling caused by extra fluid"],
+      ["lesion","abnormal patch or spot on the body"],
+      ["benign","not cancer and usually not dangerous"],
+      ["malignant","cancerous and can spread"],
+      ["prognosis","how the illness is likely to go in future"],
+      ["diagnosis","name of the illness or condition"],
+      ["respiratory distress","serious trouble breathing"],
+      ["dehydration","not enough fluid in the body"],
+      ["intravenous","through a vein using a drip or injection"],
+      ["oral","by mouth"],
+      ["topical","applied on the skin"],
+      ["symptomatic relief","treatment that reduces discomfort but does not remove the cause"],
+      ["monitor","keep watching carefully"],
+      ["follow-up","come back again for review"],
+      ["presented with","came to the doctor because of"],
+      ["contraindicated","should not be used because it may be harmful"],
+      ["adverse reaction","harmful or unwanted side effect"],
+      ["labs","blood tests or other investigations"],
+      ["vitals","basic body signs like pulse, blood pressure, temperature and breathing rate"],
+      ["antibiotics","medicines used to treat bacterial infections"],
+      ["infection","germs in the body causing illness"],
+      ["inflammation","swelling, heat, or redness in part of the body"],
+      ["idiopathic","cause is unknown"],
+      ["metastasis","spread of cancer to other parts of the body"],
+      ["remission","time when signs of disease reduce or disappear"],
+      ["palliative","focused on comfort rather than cure"],
+      ["analgesic","pain-relief medicine"],
+      ["antipyretic","medicine that reduces fever"],
+      ["NSAID","a type of pain and inflammation medicine"],
+      ["bradykinesia","slowness of movement, usually due to a problem in the brain's movement centres, often seen in Parkinson's disease"]
+    ];
 
-  function renderSummary(bullets, label) {
-    summaryList.innerHTML = "";
-    bullets.forEach(b => {
-      const li = document.createElement("li");
-      li.className = "text-[12px] text-slate-800";
-      li.textContent = b;
-      summaryList.appendChild(li);
-    });
-    summaryStatus.textContent = label;
-  }
+    const phraseReplacements = [
+      ["the patient","you"],
+      ["patient","you"],
+      ["pt","you"],
+      ["presents with","came because of"],
+      ["presented with","came because of"],
+      ["should be started on","you will start taking"],
+      ["will be started on","you will start taking"],
+      ["start on","start taking"],
+      ["start","start taking"],
+      ["will be monitored","we will keep watching"],
+      ["needs to","you need to"],
+      ["recommended","the doctor recommends"],
+      ["advise","the doctor advises you to"]
+    ];
 
-  function handleExplain(text, extraSimple) {
-    const trimmed = text.trim();
-    if (!trimmed) {
-      renderSummary(
-        ["Paste, record, or scan something first. For example, one or two sentences of what the doctor said."],
-        "No input"
-      );
-      return;
-    }
-    summaryStatus.textContent = "Decoding…";
-    const bullets = buildBulletSummary(trimmed, extraSimple);
-    renderSummary(bullets, extraSimple ? "Extra simple explanation" : "Standard explanation");
-  }
+    function simplifyTerms(text, extraSimple) {
+      let out = text;
 
-  const plainText = document.getElementById("plainText");
-  const fillExample = document.getElementById("fillExample");
-  const explainText = document.getElementById("explainText");
-  const extraSimpleText = document.getElementById("extraSimpleText");
+      jargonMap.forEach(([term, plain]) => {
+        const pattern = new RegExp("\\b" + term.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
+        out = out.replace(pattern, plain);
+      });
 
-  fillExample.onclick = () => {
-    plainText.value =
-      "Patient presents with acute exacerbation of chronic bronchitis. Start oral antibiotics and provide symptomatic relief. Advise adequate hydration, monitor vitals, and schedule follow-up in 3 days to review labs and check for any adverse reaction.";
-    plainText.focus();
-  };
+      phraseReplacements.forEach(([from, to]) => {
+        const pattern = new RegExp("\\b" + from.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
+        out = out.replace(pattern, to);
+      });
 
-  explainText.onclick = () => {
-    handleExplain(plainText.value, extraSimpleText.checked);
-  };
-
-  const recordBtn = document.getElementById("recordBtn");
-  const recordDot = document.getElementById("recordDot");
-  const recordLabel = document.getElementById("recordLabel");
-  const audioStatus = document.getElementById("audioStatus");
-  const audioText = document.getElementById("audioText");
-  const explainAudio = document.getElementById("explainAudio");
-  const extraSimpleAudio = document.getElementById("extraSimpleAudio");
-
-  let recognition = null;
-  let isRecording = false;
-
-  if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
-    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    recognition = new SR();
-    recognition.lang = "en-IN";
-    recognition.interimResults = true;
-    recognition.continuous = true;
-
-    recognition.onstart = () => {
-      audioStatus.textContent = "Listening… ask the doctor to speak in full sentences.";
-    };
-
-    recognition.onerror = e => {
-      audioStatus.textContent = "Speech recognition error: " + e.error;
-      isRecording = false;
-      recordDot.classList.remove("bg-emerald-500");
-      recordDot.classList.add("bg-white");
-      recordBtn.classList.remove("bg-rose-600");
-      recordBtn.classList.add("bg-rose-500");
-      recordLabel.textContent = "Start recording";
-    };
-
-    recognition.onresult = e => {
-      let transcript = "";
-      for (let i = 0; i < e.results.length; i++) {
-        transcript += e.results[i][0].transcript + " ";
+      if (extraSimple) {
+        out = out
+          .replace(/\badminister\b/gi,"give")
+          .replace(/\bcommence\b/gi,"start")
+          .replace(/\bdiscontinue\b/gi,"stop")
+          .replace(/\bconsume\b/gi,"take")
+          .replace(/\bprior to\b/gi,"before")
+          .replace(/\bsubsequently\b/gi,"then");
       }
-      audioText.value = transcript.trim();
+
+      return out;
+    }
+
+    function splitSentences(text) {
+      return text
+        .replace(/\s+/g," ")
+        .split(/(?<=[.!?])\s+|\n+/)
+        .map(s => s.trim())
+        .filter(Boolean);
+    }
+
+    function classifySentence(sentenceLower) {
+      const s = sentenceLower;
+      const has = list => list.some(word => s.includes(word));
+
+      if (has(["you have ","has ","diagnosed with","suffers from","is suffering from"])) return "condition";
+      if (has(["diagnosis","impression","assessment"])) return "condition";
+      if (has(["presenting with","presents with","came because of","came with","history of","complaint","c/o"])) return "condition";
+
+      if (has(["tablet","cap ","capsule","syrup","dose","mg","once daily","twice daily","thrice","bd","tds","start taking","continue","stop"])) {
+        return "treatment";
+      }
+
+      if (has(["investigation","labs","blood test","x-ray","xray","scan","ct ","mri","ultrasound"])) {
+        return "tests";
+      }
+
+      if (has(["follow-up","follow up","review","revisit","next visit","come back","return in","see again in"])) {
+        return "followup";
+      }
+
+      if (has(["emergency","immediately","if you","worsen","gets worse","high fever","chest pain","difficulty breathing","shortness of breath"])) {
+        return "warnings";
+      }
+
+      return "other";
+    }
+
+    function cleanSentenceForPatient(original, extraSimple) {
+      let text = original.trim();
+
+      text = text.replace(/^patient[:\s]+/i,"");
+      text = text.replace(/^the patient[:\s]+/i,"");
+      text = text.replace(/^pt[:\s]+/i,"");
+
+      text = simplifyTerms(text, extraSimple);
+
+      text = text.replace(/\bhe\b/gi,"you");
+      text = text.replace(/\bshe\b/gi,"you");
+      text = text.replace(/\bthey\b/gi,"you");
+
+      if (extraSimple) {
+        const parts = text.split(",");
+        if (parts.length > 2) text = parts.slice(0,2).join(",");
+      }
+
+      return text.trim();
+    }
+
+    function buildBulletSummary(rawText, extraSimple) {
+      const simplifiedBlock = simplifyTerms(rawText, extraSimple);
+      const sentences = splitSentences(simplifiedBlock);
+
+      const buckets = {
+        condition: [],
+        treatment: [],
+        tests: [],
+        followup: [],
+        warnings: [],
+        other: []
+      };
+
+      sentences.forEach(sent => {
+        const lower = sent.toLowerCase();
+        const category = classifySentence(lower);
+        const cleaned = cleanSentenceForPatient(sent, extraSimple);
+        if (!cleaned) return;
+        buckets[category].push(cleaned);
+      });
+
+      const bullets = [];
+
+      if (buckets.condition.length) {
+        bullets.push("What the doctor thinks is happening: " + buckets.condition.join(" "));
+      }
+      if (buckets.treatment.length) {
+        bullets.push("What you need to do with medicines or treatment: " + buckets.treatment.join(" "));
+      }
+      if (buckets.tests.length) {
+        bullets.push("Tests or checks the doctor wants: " + buckets.tests.join(" "));
+      }
+      if (buckets.followup.length) {
+        bullets.push("When you should come back: " + buckets.followup.join(" "));
+      }
+      if (buckets.warnings.length) {
+        bullets.push("Important warning signs or when to seek help: " + buckets.warnings.join(" "));
+      }
+      if (!bullets.length && buckets.other.length) {
+        bullets.push("Other information: " + buckets.other.join(" "));
+      }
+
+      if (!bullets.length) {
+        return ["No clear sentences detected. Try including one or two full sentences from what the doctor said."];
+      }
+
+      const top = bullets.slice(0, 6);
+
+      if (extraSimple) {
+        return top.map(b => {
+          return b
+            .replace("What the doctor thinks is happening:","The doctor thinks this is happening:")
+            .replace("What you need to do with medicines or treatment:","About your medicines:")
+            .replace("Tests or checks the doctor wants:","Tests the doctor wants:")
+            .replace("When you should come back:","When you must come back:")
+            .replace("Important warning signs or when to seek help:","Watch out for this:");
+        });
+      }
+
+      return top;
+    }
+
+    const summaryList = document.getElementById("summaryList");
+    const summaryStatus = document.getElementById("summaryStatus");
+
+    function renderSummary(bullets, label) {
+      summaryList.innerHTML = "";
+      bullets.forEach(b => {
+        const li = document.createElement("li");
+        li.className = "text-[12px] text-slate-800";
+        li.textContent = b;
+        summaryList.appendChild(li);
+      });
+      summaryStatus.textContent = label;
+    }
+
+    function handleExplain(text, extraSimple) {
+      const trimmed = text.trim();
+      if (!trimmed) {
+        renderSummary(
+          ["Paste, record, or scan something first. For example, one or two sentences of what the doctor said."],
+          "No input"
+        );
+        return;
+      }
+      summaryStatus.textContent = "Decoding…";
+      const bullets = buildBulletSummary(trimmed, extraSimple);
+      renderSummary(bullets, extraSimple ? "Extra simple explanation" : "Standard explanation");
+    }
+
+    const plainText = document.getElementById("plainText");
+    const fillExample = document.getElementById("fillExample");
+    const explainText = document.getElementById("explainText");
+    const extraSimpleText = document.getElementById("extraSimpleText");
+
+    fillExample.onclick = () => {
+      plainText.value =
+        "Patient presents with acute exacerbation of chronic bronchitis. Start oral antibiotics and provide symptomatic relief. Advise adequate hydration, monitor vitals, and schedule follow-up in 3 days to review labs and check for any adverse reaction.";
+      plainText.focus();
     };
 
-    recognition.onend = () => {
-      if (isRecording) {
-        audioStatus.textContent = "Stopped listening.";
+    explainText.onclick = () => {
+      handleExplain(plainText.value, extraSimpleText.checked);
+    };
+
+    const recordBtn = document.getElementById("recordBtn");
+    const recordDot = document.getElementById("recordDot");
+    const recordLabel = document.getElementById("recordLabel");
+    const audioStatus = document.getElementById("audioStatus");
+    const audioText = document.getElementById("audioText");
+    const explainAudio = document.getElementById("explainAudio");
+    const extraSimpleAudio = document.getElementById("extraSimpleAudio");
+
+    let recognition = null;
+    let isRecording = false;
+
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = "en-IN";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onstart = () => {
+        audioStatus.textContent = "Listening… ask the doctor to speak in full sentences.";
+      };
+
+      recognition.onerror = e => {
+        audioStatus.textContent = "Speech recognition error: " + e.error;
         isRecording = false;
         recordDot.classList.remove("bg-emerald-500");
         recordDot.classList.add("bg-white");
         recordBtn.classList.remove("bg-rose-600");
         recordBtn.classList.add("bg-rose-500");
         recordLabel.textContent = "Start recording";
+      };
+
+      recognition.onresult = e => {
+        let transcript = "";
+        for (let i = 0; i < e.results.length; i++) {
+          transcript += e.results[i][0].transcript + " ";
+        }
+        audioText.value = transcript.trim();
+      };
+
+      recognition.onend = () => {
+        if (isRecording) {
+          audioStatus.textContent = "Stopped listening.";
+          isRecording = false;
+          recordDot.classList.remove("bg-emerald-500");
+          recordDot.classList.add("bg-white");
+          recordBtn.classList.remove("bg-rose-600");
+          recordBtn.classList.add("bg-rose-500");
+          recordLabel.textContent = "Start recording";
+        }
+      };
+    } else {
+      audioStatus.textContent = "Speech recognition not supported in this browser. Use Chrome on desktop or Android.";
+      recordBtn.disabled = true;
+      recordBtn.classList.add("opacity-60","cursor-not-allowed");
+    }
+
+    recordBtn.onclick = () => {
+      if (!recognition) return;
+      if (!isRecording) {
+        recognition.start();
+        isRecording = true;
+        recordDot.classList.remove("bg-white");
+        recordDot.classList.add("bg-emerald-500");
+        recordBtn.classList.remove("bg-rose-500");
+        recordBtn.classList.add("bg-rose-600");
+        recordLabel.textContent = "Stop recording";
+        audioStatus.textContent = "Listening…";
+      } else {
+        recognition.stop();
+        isRecording = false;
+        recordDot.classList.remove("bg-emerald-500");
+        recordDot.classList.add("bg-white");
+        recordBtn.classList.remove("bg-rose-600");
+        recordBtn.classList.add("bg-rose-500");
+        recordLabel.textContent = "Start recording";
+        audioStatus.textContent = "Stopped recording.";
       }
     };
-  } else {
-    audioStatus.textContent = "Speech recognition not supported in this browser. Use Chrome on desktop or Android.";
-    recordBtn.disabled = true;
-    recordBtn.classList.add("opacity-60","cursor-not-allowed");
-  }
 
-  recordBtn.onclick = () => {
-    if (!recognition) return;
-    if (!isRecording) {
-      recognition.start();
-      isRecording = true;
-      recordDot.classList.remove("bg-white");
-      recordDot.classList.add("bg-emerald-500");
-      recordBtn.classList.remove("bg-rose-500");
-      recordBtn.classList.add("bg-rose-600");
-      recordLabel.textContent = "Stop recording";
-      audioStatus.textContent = "Listening…";
-    } else {
-      recognition.stop();
-      isRecording = false;
-      recordDot.classList.remove("bg-emerald-500");
-      recordDot.classList.add("bg-white");
-      recordBtn.classList.remove("bg-rose-600");
-      recordBtn.classList.add("bg-rose-500");
-      recordLabel.textContent = "Start recording";
-      audioStatus.textContent = "Stopped recording.";
-    }
-  };
+    explainAudio.onclick = () => {
+      handleExplain(audioText.value, extraSimpleAudio.checked);
+    };
 
-  explainAudio.onclick = () => {
-    handleExplain(audioText.value, extraSimpleAudio.checked);
-  };
+    const imageInput = document.getElementById("imageInput");
+    const ocrStatus = document.getElementById("ocrStatus");
+    const ocrText = document.getElementById("ocrText");
+    const explainImage = document.getElementById("explainImage");
+    const extraSimpleImage = document.getElementById("extraSimpleImage");
 
-  const imageInput = document.getElementById("imageInput");
-  const ocrStatus = document.getElementById("ocrStatus");
-  const ocrText = document.getElementById("ocrText");
-  const explainImage = document.getElementById("explainImage");
-  const extraSimpleImage = document.getElementById("extraSimpleImage");
-
-  imageInput.onchange = () => {
-    const file = imageInput.files && imageInput.files[0];
-    if (!file) return;
-    ocrStatus.textContent = "Reading prescription…";
-    Tesseract.recognize(file, "eng", {
-      logger: m => {
-        if (m.status === "recognizing text" && m.progress) {
-          const pct = Math.round(m.progress * 100);
-          ocrStatus.textContent = "Recognising text… " + pct + "%";
+    imageInput.onchange = () => {
+      const file = imageInput.files && imageInput.files[0];
+      if (!file) return;
+      ocrStatus.textContent = "Reading prescription…";
+      Tesseract.recognize(file, "eng", {
+        logger: m => {
+          if (m.status === "recognizing text" && m.progress) {
+            const pct = Math.round(m.progress * 100);
+            ocrStatus.textContent = "Recognising text… " + pct + "%";
+          }
         }
-      }
-    }).then(({ data }) => {
-      ocrText.value = (data && data.text ? data.text.trim() : "");
-      ocrStatus.textContent = "Finished reading. Edit if needed, then generate an explanation.";
-    }).catch(() => {
-      ocrStatus.textContent = "Could not read this image. Try a clearer photo or printed text.";
-    });
-  };
+      }).then(({ data }) => {
+        ocrText.value = (data && data.text ? data.text.trim() : "");
+        ocrStatus.textContent = "Finished reading. Edit if needed, then generate an explanation.";
+      }).catch(() => {
+        ocrStatus.textContent = "Could not read this image. Try a clearer photo or printed text.";
+      });
+    };
 
-  explainImage.onclick = () => {
-    handleExplain(ocrText.value, extraSimpleImage.checked);
-  };
-</script>
+    explainImage.onclick = () => {
+      handleExplain(ocrText.value, extraSimpleImage.checked);
+    };
+  </script>
+</body>
+</html>
