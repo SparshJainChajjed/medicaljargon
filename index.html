@@ -61,7 +61,7 @@
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
               <p class="text-xs font-semibold text-slate-900">2. Decode</p>
-              <p class="text-xs text-slate-500">We detect medical terms and restructure the text in patient-first language.</p>
+              <p class="text-xs text-slate-500">We detect medical terms and re-structure the text in patient-first language.</p>
             </div>
             <div class="rounded-2xl border border-slate-200 bg-white px-3.5 py-3 flex flex-col gap-1">
               <p class="text-xs font-semibold text-slate-900">3. Explain</p>
@@ -105,7 +105,6 @@
             </button>
           </div>
 
-          <!-- Panels -->
           <!-- AUDIO PANEL -->
           <div id="panel-audio" class="space-y-3">
             <p class="text-[11px] text-slate-500">
@@ -208,7 +207,7 @@
   </div>
 
   <script>
-    // TAB LOGIC
+    // ---------- Tabs ----------
     const tabs = {
       audio: document.getElementById("tab-audio"),
       text: document.getElementById("tab-text"),
@@ -238,7 +237,8 @@
     tabs.text.onclick = () => activateTab("text");
     tabs.prescription.onclick = () => activateTab("prescription");
 
-    // JARGON + SIMPLIFIER
+    // ---------- Jargon + rewriting engine ----------
+
     const jargonMap = [
       ["acute","sudden or very recent"],
       ["chronic","long-term or ongoing"],
@@ -274,10 +274,13 @@
       ["idiopathic","cause is unknown"],
       ["metastasis","spread of cancer to other parts of the body"],
       ["remission","time when signs of disease reduce or disappear"],
-      ["palliative","focused on comfort rather than cure"]
+      ["palliative","focused on comfort rather than cure"],
+      ["analgesic","pain-relief medicine"],
+      ["antipyretic","medicine that reduces fever"],
+      ["NSAID","a type of pain and inflammation medicine"]
     ];
 
-    const sentenceReplacements = [
+    const phraseReplacements = [
       ["the patient","you"],
       ["patient","you"],
       ["pt","you"],
@@ -285,6 +288,7 @@
       ["presented with","came because of"],
       ["should be started on","you will start taking"],
       ["will be started on","you will start taking"],
+      ["start on","start taking"],
       ["start","start taking"],
       ["will be monitored","we will keep watching"],
       ["needs to","you need to"],
@@ -294,77 +298,149 @@
 
     function simplifyTerms(text, extraSimple) {
       let out = text;
+
       jargonMap.forEach(([term, plain]) => {
         const pattern = new RegExp("\\b" + term.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
         out = out.replace(pattern, plain);
       });
-      sentenceReplacements.forEach(([from,to]) => {
+
+      phraseReplacements.forEach(([from, to]) => {
         const pattern = new RegExp("\\b" + from.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&") + "\\b","gi");
         out = out.replace(pattern, to);
       });
+
       if (extraSimple) {
         out = out
           .replace(/\badminister\b/gi,"give")
           .replace(/\bcommence\b/gi,"start")
           .replace(/\bdiscontinue\b/gi,"stop")
           .replace(/\bconsume\b/gi,"take")
-          .replace(/\bprior to\b/gi,"before");
+          .replace(/\bprior to\b/gi,"before")
+          .replace(/\bsubsequently\b/gi,"then");
       }
+
       return out;
     }
 
     function splitSentences(text) {
       return text
         .replace(/\s+/g," ")
-        .split(/(?<=[.!?])\s+/)
+        .split(/(?<=[.!?])\s+|\n+/)
         .map(s => s.trim())
         .filter(Boolean);
     }
 
+    function classifySentence(sentenceLower) {
+      const s = sentenceLower;
+
+      const has = list => list.some(word => s.includes(word));
+
+      if (has(["diagnosis","impression","assessment"])) return "condition";
+      if (has(["presenting with","presents with","came because of","came with","history of","complaint","c/o"])) return "condition";
+
+      if (has(["tablet","cap ","capsule","syrup","dose","mg","once daily","twice daily","thrice","bd","tds","start taking","continue","stop"])) {
+        return "treatment";
+      }
+
+      if (has(["investigation","labs","blood test","x-ray","xray","scan","ct ","mri","ultrasound"])) {
+        return "tests";
+      }
+
+      if (has(["follow-up","follow up","review","revisit","next visit","come back","return in","see again in"])) {
+        return "followup";
+      }
+
+      if (has(["emergency","immediately","if you","worsen","gets worse","high fever","chest pain","difficulty breathing","shortness of breath"])) {
+        return "warnings";
+      }
+
+      return "other";
+    }
+
+    function cleanSentenceForPatient(original, extraSimple) {
+      let text = original.trim();
+
+      text = text.replace(/^patient[:\s]+/i,"");
+      text = text.replace(/^the patient[:\s]+/i,"");
+      text = text.replace(/^pt[:\s]+/i,"");
+
+      text = simplifyTerms(text, extraSimple);
+
+      text = text.replace(/\bhe\b/gi,"you");
+      text = text.replace(/\bshe\b/gi,"you");
+      text = text.replace(/\bthey\b/gi,"you");
+
+      if (extraSimple) {
+        const parts = text.split(",");
+        if (parts.length > 2) {
+          text = parts.slice(0,2).join(",");
+        }
+      }
+
+      return text.trim();
+    }
+
     function buildBulletSummary(rawText, extraSimple) {
-      const base = simplifyTerms(rawText, extraSimple);
-      const sentences = splitSentences(base);
-      const cleaned = sentences.map(s => {
-        let t = s;
-        t = t.replace(/^you are advised to/i,"you should");
-        t = t.replace(/^it is advised that/i,"you should");
-        t = t.replace(/^plan:/i,"the plan is");
-        t = t.replace(/^impression:/i,"the doctor thinks");
-        t = t.replace(/^assessment:/i,"the doctor believes");
-        return t;
+      const simplifiedBlock = simplifyTerms(rawText, extraSimple);
+      const sentences = splitSentences(simplifiedBlock);
+
+      const buckets = {
+        condition: [],
+        treatment: [],
+        tests: [],
+        followup: [],
+        warnings: [],
+        other: []
+      };
+
+      sentences.forEach(sent => {
+        const lower = sent.toLowerCase();
+        const category = classifySentence(lower);
+        const cleaned = cleanSentenceForPatient(sent, extraSimple);
+        if (!cleaned) return;
+        buckets[category].push(cleaned);
       });
 
       const bullets = [];
-      cleaned.forEach(s => {
-        if (/diagnosis|doctor thinks|doctor believes/i.test(s)) {
-          bullets.push("What the doctor thinks is happening: " + s);
-        } else if (/plan|start taking|continue|stop|dose|every|daily|twice|tablet|capsule|syrup/i.test(s)) {
-          bullets.push("What you need to do with medicines or treatment: " + s);
-        } else if (/follow-up|come back|review|next visit|in \d+ days/i.test(s)) {
-          bullets.push("When you need to come back or follow up: " + s);
-        } else if (/warning|if you/i.test(s) || /seek|immediately|emergency/i.test(s)) {
-          bullets.push("Danger signs or when to seek help: " + s);
-        } else {
-          bullets.push(s);
-        }
-      });
+
+      if (buckets.condition.length) {
+        bullets.push("What the doctor thinks is happening: " + buckets.condition.join(" "));
+      }
+      if (buckets.treatment.length) {
+        bullets.push("What you need to do with medicines or treatment: " + buckets.treatment.join(" "));
+      }
+      if (buckets.tests.length) {
+        bullets.push("Tests or checks the doctor wants: " + buckets.tests.join(" "));
+      }
+      if (buckets.followup.length) {
+        bullets.push("When you should come back: " + buckets.followup.join(" "));
+      }
+      if (buckets.warnings.length) {
+        bullets.push("Important warning signs or when to seek help: " + buckets.warnings.join(" "));
+      }
+      if (!bullets.length && buckets.other.length) {
+        bullets.push("Extra information from the note: " + buckets.other.join(" "));
+      }
 
       if (!bullets.length) {
         return ["No clear sentences detected. Try including one or two full sentences from what the doctor said."];
       }
 
-      const limited = bullets.slice(0, 6);
+      const top = bullets.slice(0, 6);
+
       if (extraSimple) {
-        return limited.map(b => {
-          let t = b;
-          t = t.replace(/what the doctor thinks is happening:/i,"the doctor thinks this is happening:");
-          t = t.replace(/what you need to do with medicines or treatment:/i,"about your medicines:");
-          t = t.replace(/when you need to come back or follow up:/i,"about your next visit:");
-          t = t.replace(/danger signs or when to seek help:/i,"watch out for this:");
-          return t;
+        return top.map(b => {
+          return b
+            .replace("What the doctor thinks is happening:","The doctor thinks this is happening:")
+            .replace("What you need to do with medicines or treatment:","About your medicines:")
+            .replace("Tests or checks the doctor wants:","Tests the doctor wants:")
+            .replace("When you should come back:","When you must come back:")
+            .replace("Important warning signs or when to seek help:","Watch out for this:")
+            .replace("Extra information from the note:","Other information:");
         });
       }
-      return limited;
+
+      return top;
     }
 
     const summaryList = document.getElementById("summaryList");
@@ -395,7 +471,7 @@
       renderSummary(bullets, extraSimple ? "Extra simple explanation" : "Standard explanation");
     }
 
-    // TEXT PANEL HOOKS
+    // ---------- TEXT PANEL ----------
     const plainText = document.getElementById("plainText");
     const fillExample = document.getElementById("fillExample");
     const explainText = document.getElementById("explainText");
@@ -411,7 +487,7 @@
       handleExplain(plainText.value, extraSimpleText.checked);
     };
 
-    // AUDIO PANEL HOOKS
+    // ---------- AUDIO PANEL ----------
     const recordBtn = document.getElementById("recordBtn");
     const recordDot = document.getElementById("recordDot");
     const recordLabel = document.getElementById("recordLabel");
@@ -496,7 +572,7 @@
       handleExplain(audioText.value, extraSimpleAudio.checked);
     };
 
-    // PRESCRIPTION PANEL HOOKS
+    // ---------- PRESCRIPTION PANEL ----------
     const imageInput = document.getElementById("imageInput");
     const ocrStatus = document.getElementById("ocrStatus");
     const ocrText = document.getElementById("ocrText");
@@ -507,7 +583,7 @@
       const file = imageInput.files && imageInput.files[0];
       if (!file) return;
       ocrStatus.textContent = "Reading prescription…";
-      Tesseract.recognize(file,"eng",{
+      Tesseract.recognize(file, "eng", {
         logger: m => {
           if (m.status === "recognizing text" && m.progress) {
             const pct = Math.round(m.progress * 100);
